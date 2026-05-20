@@ -18,19 +18,35 @@ export const searchCity = async (cityName) => {
 };
 
 export const reverseGeocode = async (latitude, longitude) => {
+  // FIX: Open-Meteo's geocoding API has NO /reverse endpoint — it only
+  // supports forward search by city name. Every previous call here was
+  // hitting a 404, the catch block swallowed it, and the hook fell back
+  // to the default city (Srinagar) every time, ignoring the user's location.
+  //
+  // Using BigDataCloud's reverse geocoding instead — free, no API key needed.
   const response = await fetch(
-    `${GEOCODING_API}/reverse?latitude=${latitude}&longitude=${longitude}&count=1&language=en&format=json`
+    `https://api.bigdatacloud.net/data/reverse-geocode-client` +
+    `?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
   );
 
   if (!response.ok) throw new Error("Failed to resolve current location");
 
   const data = await response.json();
 
-  if (!data.results || data.results.length === 0) {
-    throw new Error("Location not found");
-  }
+  // BigDataCloud returns `city` for large cities and `locality` for smaller
+  // towns/villages. We fall back through both.
+  const cityName = data.city || data.locality || data.principalSubdivision;
+  if (!cityName) throw new Error("Location not found");
 
-  return data.results[0];
+  // Normalize the response to match the shape the rest of the app expects
+  // (same fields as Open-Meteo's /search results).
+  return {
+    name: cityName,
+    country: data.countryName,
+    country_code: data.countryCode,
+    latitude,
+    longitude,
+  };
 };
 
 export const fetchWeatherData = async (
