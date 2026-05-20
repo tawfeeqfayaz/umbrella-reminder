@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.hourly-forecast {
+  overflow-x: auto;   /* allow scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.hourly-forecast::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+.background {
+  background-image: url("assets/bg.jpg");
+  background-position: center;
+  background-size: cover;
+}
